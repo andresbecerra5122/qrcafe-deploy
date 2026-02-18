@@ -1,0 +1,9 @@
+[submodule "QrCafe"]
+	path = QrCafe
+	url = https://github.com/andresbecerra5122/qrcafe-api.git
+[submodule "QrCafe-Web/qrcafe-web"]
+	path = QrCafe-Web/qrcafe-web
+	url = https://github.com/andresbecerra5122/qrcafe-web.git
+[submodule "QrCafe-Web-Admin/qrcafe-admin"]
+	path = QrCafe-Web-Admin/qrcafe-admin
+	url = https://github.com/andresbecerra5122/qrcafe-admin.git
