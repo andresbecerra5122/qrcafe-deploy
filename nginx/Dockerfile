@@ -2,16 +2,18 @@
 FROM node:20-alpine AS build-customer
 WORKDIR /app
 COPY QrCafe-Web/qrcafe-web/package.json QrCafe-Web/qrcafe-web/package-lock.json ./
-RUN npm ci
+RUN npm install
 COPY QrCafe-Web/qrcafe-web/ .
+ENV NG_BUILD_FONTS_INLINE=false
 RUN npx ng build --configuration=production
 
 # ---- Build admin app ----
 FROM node:20-alpine AS build-admin
 WORKDIR /app
 COPY QrCafe-Web-Admin/qrcafe-admin/package.json QrCafe-Web-Admin/qrcafe-admin/package-lock.json ./
-RUN npm ci
+RUN npm install
 COPY QrCafe-Web-Admin/qrcafe-admin/ .
+ENV NG_BUILD_FONTS_INLINE=false
 RUN npx ng build --configuration=production --base-href=/admin/
 
 # ---- Nginx runtime ----
