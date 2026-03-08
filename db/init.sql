@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS public.restaurants (
     timezone        VARCHAR(50)  NOT NULL DEFAULT 'America/Bogota',
     tax_rate        NUMERIC(5,4) NOT NULL DEFAULT 0.00,
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    enable_dine_in  BOOLEAN      NOT NULL DEFAULT TRUE,
+    enable_delivery BOOLEAN      NOT NULL DEFAULT FALSE,
+    enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -60,6 +64,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
     table_id             UUID         REFERENCES public.tables(id),
     customer_name        VARCHAR(200),
     notes                TEXT,
+    delivery_address     TEXT,
+    delivery_reference   TEXT,
+    delivery_phone       VARCHAR(50),
     status               VARCHAR(30)  NOT NULL DEFAULT 'CREATED',
     currency             VARCHAR(5)   NOT NULL DEFAULT 'COP',
     subtotal             NUMERIC(12,2) NOT NULL DEFAULT 0,
@@ -72,6 +79,17 @@ CREATE TABLE IF NOT EXISTS public.orders (
     created_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.restaurants
+    ADD COLUMN IF NOT EXISTS enable_dine_in BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS enable_delivery BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE public.orders
+    ADD COLUMN IF NOT EXISTS delivery_address TEXT,
+    ADD COLUMN IF NOT EXISTS delivery_reference TEXT,
+    ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(50);
 
 CREATE TABLE IF NOT EXISTS public.order_items (
     id                UUID PRIMARY KEY,
@@ -107,6 +125,19 @@ CREATE TABLE IF NOT EXISTS public.waiter_calls (
     attended_at     TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS public.staff_users (
+    id              UUID PRIMARY KEY,
+    restaurant_id   UUID         NOT NULL REFERENCES public.restaurants(id),
+    full_name       VARCHAR(200) NOT NULL,
+    email           VARCHAR(320) NOT NULL,
+    password_hash   TEXT         NOT NULL,
+    role            VARCHAR(30)  NOT NULL,
+    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    last_login_at   TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS public.restaurant_order_counters (
     restaurant_id   UUID PRIMARY KEY REFERENCES public.restaurants(id),
     last_number     BIGINT NOT NULL DEFAULT 0
@@ -119,6 +150,7 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order_id     ON public.order_items(or
 CREATE INDEX IF NOT EXISTS idx_products_restaurant      ON public.products(restaurant_id, is_active);
 CREATE INDEX IF NOT EXISTS idx_tables_restaurant_token  ON public.tables(restaurant_id, token);
 CREATE INDEX IF NOT EXISTS idx_waiter_calls_restaurant  ON public.waiter_calls(restaurant_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_staff_users_restaurant_email ON public.staff_users(restaurant_id, email);
 
 -- ============================================================
 -- DEMO SEED DATA
@@ -126,15 +158,27 @@ CREATE INDEX IF NOT EXISTS idx_waiter_calls_restaurant  ON public.waiter_calls(r
 -- Restaurant ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 --
 -- Access URLs (after docker-compose up):
---   Customer menu:  http://localhost/menu?tableToken=mesa-1-token-abc123
+--   Customer menu:  http://localhost/menu?restaurantId=a1b2c3d4-e5f6-7890-abcd-ef1234567890&table=mesa-1-token-abc123
 --   Kitchen:        http://localhost/admin/dashboard?restaurantId=a1b2c3d4-e5f6-7890-abcd-ef1234567890
 --   Waiters:        http://localhost/admin/waiters?restaurantId=a1b2c3d4-e5f6-7890-abcd-ef1234567890
 --   Products:       http://localhost/admin/products?restaurantId=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+--
+-- Demo staff login users:
+--   admin@qrcafe.local   / Admin123!
+--   kitchen@qrcafe.local / Kitchen123!
+--   waiter@qrcafe.local  / Waiter123!
+--   delivery@qrcafe.local / Waiter123!
 -- ============================================================
 
 -- Restaurant
-INSERT INTO public.restaurants (id, name, slug, country_code, currency, timezone, tax_rate, is_active)
-VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Mi Restaurante Demo', 'mi-restaurante-demo', 'CO', 'COP', 'America/Bogota', 0.08, TRUE)
+INSERT INTO public.restaurants (
+  id, name, slug, country_code, currency, timezone, tax_rate, is_active,
+  enable_dine_in, enable_delivery, enable_delivery_cash, enable_delivery_card
+)
+VALUES (
+  'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Mi Restaurante Demo', 'mi-restaurante-demo', 'CO', 'COP',
+  'America/Bogota', 0.08, TRUE, TRUE, TRUE, TRUE, TRUE
+)
 ON CONFLICT (id) DO NOTHING;
 
 -- Order counter
@@ -198,4 +242,16 @@ INSERT INTO public.products (id, restaurant_id, category_id, name, description, 
   ('33333333-3333-3333-3333-333333333309', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', '22222222-2222-2222-2222-222222222203',
    'Jugo de Mango', 'Jugo natural de mango fresco', 9000, TRUE, TRUE, 3,
    'https://images.pexels.com/photos/2789328/pexels-photo-2789328.jpeg?auto=compress&cs=tinysrgb&w=600')
+ON CONFLICT (id) DO NOTHING;
+
+-- Staff users (password hashes generated with PBKDF2-SHA256, 100000 iterations)
+INSERT INTO public.staff_users (id, restaurant_id, full_name, email, password_hash, role, is_active) VALUES
+  ('44444444-4444-4444-4444-444444444401', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Admin Demo', 'admin@qrcafe.local',
+   '100000.hwighKEROwv9/PqKUUDlEg==.vlrvQrSrJirucbvY08OqjUtjMBCZoZrKGe3nmiI8OEc=', 'Admin', TRUE),
+  ('44444444-4444-4444-4444-444444444402', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Kitchen Demo', 'kitchen@qrcafe.local',
+   '100000.mBaWv1dcLCf8Q2/Z3dh+Fw==.Yg9uRg1LWL0dzUEQGZVZpERFaG28OeUGV1fuJklnlns=', 'Kitchen', TRUE),
+  ('44444444-4444-4444-4444-444444444403', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Waiter Demo', 'waiter@qrcafe.local',
+   '100000.awFf6Kxbx3kpVia/Ym5xbQ==.6BniZm8dNZBYZ74SDAhcZj1sp51R8XBWaRNdZulqsz8=', 'Waiter', TRUE),
+  ('44444444-4444-4444-4444-444444444404', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Delivery Demo', 'delivery@qrcafe.local',
+   '100000.awFf6Kxbx3kpVia/Ym5xbQ==.6BniZm8dNZBYZ74SDAhcZj1sp51R8XBWaRNdZulqsz8=', 'Delivery', TRUE)
 ON CONFLICT (id) DO NOTHING;

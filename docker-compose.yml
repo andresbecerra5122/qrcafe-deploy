@@ -28,6 +28,15 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB:-qrcafe};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+      JWT_SECRET: ${JWT_SECRET:-change_this_to_a_very_long_random_secret_key_12345}
+      JWT_ISSUER: ${JWT_ISSUER:-QrCafe.Api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-QrCafe.Admin}
+      JWT_EXPIRY_MINUTES: ${JWT_EXPIRY_MINUTES:-480}
+      BOOTSTRAP_ADMIN_RESTAURANT_ID: ${BOOTSTRAP_ADMIN_RESTAURANT_ID:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_FULL_NAME: ${BOOTSTRAP_ADMIN_FULL_NAME:-Initial Admin}
+      BOOTSTRAP_ADMIN_ROLE: ${BOOTSTRAP_ADMIN_ROLE:-Manager}
 
   nginx:
     build:
