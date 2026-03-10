@@ -164,6 +164,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_staff_users_restaurant_email ON public.staf
 --   Products:       http://localhost/admin/products?restaurantId=a1b2c3d4-e5f6-7890-abcd-ef1234567890
 --
 -- Demo staff login users:
+--   superadmin@qrcafe.local / Admin123!
 --   admin@qrcafe.local   / Admin123!
 --   kitchen@qrcafe.local / Kitchen123!
 --   waiter@qrcafe.local  / Waiter123!
@@ -246,6 +247,8 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Staff users (password hashes generated with PBKDF2-SHA256, 100000 iterations)
 INSERT INTO public.staff_users (id, restaurant_id, full_name, email, password_hash, role, is_active) VALUES
+  ('44444444-4444-4444-4444-444444444405', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Super Admin', 'superadmin@qrcafe.local',
+   '100000.hwighKEROwv9/PqKUUDlEg==.vlrvQrSrJirucbvY08OqjUtjMBCZoZrKGe3nmiI8OEc=', 'SuperAdmin', TRUE),
   ('44444444-4444-4444-4444-444444444401', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Admin Demo', 'admin@qrcafe.local',
    '100000.hwighKEROwv9/PqKUUDlEg==.vlrvQrSrJirucbvY08OqjUtjMBCZoZrKGe3nmiI8OEc=', 'Admin', TRUE),
   ('44444444-4444-4444-4444-444444444402', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Kitchen Demo', 'kitchen@qrcafe.local',
