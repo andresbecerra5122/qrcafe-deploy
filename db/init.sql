@@ -99,9 +99,13 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     unit_price_snap   NUMERIC(12,2)  NOT NULL DEFAULT 0,
     qty               INT            NOT NULL DEFAULT 1,
     notes             TEXT,
+    is_done           BOOLEAN        NOT NULL DEFAULT FALSE,
     line_total        NUMERIC(12,2)  NOT NULL DEFAULT 0,
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE IF EXISTS public.order_items
+    ADD COLUMN IF NOT EXISTS is_done BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS public.payments (
     id              UUID PRIMARY KEY,
