@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.restaurants (
     enable_delivery BOOLEAN      NOT NULL DEFAULT FALSE,
     enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
     enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -85,7 +86,8 @@ ALTER TABLE public.restaurants
     ADD COLUMN IF NOT EXISTS enable_dine_in BOOLEAN NOT NULL DEFAULT TRUE,
     ADD COLUMN IF NOT EXISTS enable_delivery BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
-    ADD COLUMN IF NOT EXISTS enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE;
+    ADD COLUMN IF NOT EXISTS enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE;
 
 ALTER TABLE public.orders
     ADD COLUMN IF NOT EXISTS delivery_address TEXT,
@@ -180,11 +182,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_staff_users_restaurant_email ON public.staf
 -- Restaurant
 INSERT INTO public.restaurants (
   id, name, slug, country_code, currency, timezone, tax_rate, is_active,
-  enable_dine_in, enable_delivery, enable_delivery_cash, enable_delivery_card
+  enable_dine_in, enable_delivery, enable_delivery_cash, enable_delivery_card, enable_pay_at_cashier
 )
 VALUES (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Mi Restaurante Demo', 'mi-restaurante-demo', 'CO', 'COP',
-  'America/Bogota', 0.08, TRUE, TRUE, TRUE, TRUE, TRUE
+  'America/Bogota', 0.08, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE
 )
 ON CONFLICT (id) DO NOTHING;
 

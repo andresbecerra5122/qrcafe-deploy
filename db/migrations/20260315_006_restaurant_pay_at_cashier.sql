@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS public.restaurants
+    ADD COLUMN IF NOT EXISTS enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE;
