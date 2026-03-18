@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     currency             VARCHAR(5)   NOT NULL DEFAULT 'COP',
     subtotal             NUMERIC(12,2) NOT NULL DEFAULT 0,
     tax                  NUMERIC(12,2) NOT NULL DEFAULT 0,
+    delivery_fee         NUMERIC(12,2) NOT NULL DEFAULT 0,
     total                NUMERIC(12,2) NOT NULL DEFAULT 0,
     payment_method       VARCHAR(20),
     payment_requested_at TIMESTAMPTZ,
@@ -89,7 +90,8 @@ ALTER TABLE public.restaurants
 ALTER TABLE public.orders
     ADD COLUMN IF NOT EXISTS delivery_address TEXT,
     ADD COLUMN IF NOT EXISTS delivery_reference TEXT,
-    ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(50);
+    ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(12,2) NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS public.order_items (
     id                UUID PRIMARY KEY,
