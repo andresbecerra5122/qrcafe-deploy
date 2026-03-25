@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     delivery_fee         NUMERIC(12,2) NOT NULL DEFAULT 0,
     total                NUMERIC(12,2) NOT NULL DEFAULT 0,
     payment_method       VARCHAR(20),
+    payment_method_label TEXT,
     payment_requested_at TIMESTAMPTZ,
     paid_at              TIMESTAMPTZ,
     order_number         BIGINT       NOT NULL DEFAULT 0,
@@ -151,6 +152,18 @@ CREATE TABLE IF NOT EXISTS public.restaurant_order_counters (
     last_number     BIGINT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS public.restaurant_payment_methods (
+    id              UUID PRIMARY KEY,
+    restaurant_id   UUID          NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+    code            VARCHAR(30)   NOT NULL,
+    label           VARCHAR(80)   NOT NULL,
+    is_active       BOOLEAN       NOT NULL DEFAULT TRUE,
+    sort            INT           NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    UNIQUE (restaurant_id, code)
+);
+
 -- ============ INDEXES ============
 
 CREATE INDEX IF NOT EXISTS idx_orders_restaurant_status ON public.orders(restaurant_id, status);
@@ -159,6 +172,8 @@ CREATE INDEX IF NOT EXISTS idx_products_restaurant      ON public.products(resta
 CREATE INDEX IF NOT EXISTS idx_tables_restaurant_token  ON public.tables(restaurant_id, token);
 CREATE INDEX IF NOT EXISTS idx_waiter_calls_restaurant  ON public.waiter_calls(restaurant_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_staff_users_restaurant_email ON public.staff_users(restaurant_id, email);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_restaurant_payment_methods_restaurant_code
+  ON public.restaurant_payment_methods (restaurant_id, code);
 
 -- ============================================================
 -- DEMO SEED DATA
@@ -194,6 +209,11 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.restaurant_order_counters (restaurant_id, last_number)
 VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 0)
 ON CONFLICT (restaurant_id) DO NOTHING;
+
+INSERT INTO public.restaurant_payment_methods (id, restaurant_id, code, label, is_active, sort) VALUES
+  ('55555555-5555-5555-5555-555555555501', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'CASH', 'Efectivo', TRUE, 1),
+  ('55555555-5555-5555-5555-555555555502', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'CARD', 'Tarjeta', TRUE, 2)
+ON CONFLICT (restaurant_id, code) DO NOTHING;
 
 -- Tables (5 mesas)
 INSERT INTO public.tables (id, restaurant_id, number, token, is_active) VALUES
