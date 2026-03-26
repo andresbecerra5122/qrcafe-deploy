@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.restaurants (
     enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
     enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE,
     enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE,
+    avg_preparation_minutes INT NOT NULL DEFAULT 15,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -88,7 +89,8 @@ ALTER TABLE public.restaurants
     ADD COLUMN IF NOT EXISTS enable_delivery BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS enable_delivery_cash BOOLEAN NOT NULL DEFAULT TRUE,
     ADD COLUMN IF NOT EXISTS enable_delivery_card BOOLEAN NOT NULL DEFAULT TRUE,
-    ADD COLUMN IF NOT EXISTS enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE;
+    ADD COLUMN IF NOT EXISTS enable_pay_at_cashier BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS avg_preparation_minutes INT NOT NULL DEFAULT 15;
 
 ALTER TABLE public.orders
     ADD COLUMN IF NOT EXISTS delivery_address TEXT,
